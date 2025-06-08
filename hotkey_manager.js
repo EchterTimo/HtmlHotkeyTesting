@@ -48,19 +48,32 @@ function saveHotkeys() {
     localStorage.setItem(HOTKEYS_KEY, JSON.stringify(hotkeys));
 }
 
-// Update label when key is triggered
-function updateTriggerLabel(action, key) {
-    const label = document.getElementById("trigger-label");
-    label.textContent = `Action "${action}" triggered by key "${key}"`;
-}
-
 // List all currently pressed keys
-function updatePressedKeysList() {
+function updateTriggeredActionsList() {
     const listDiv = document.getElementById("pressed-keys-list");
-    if (pressedKeys.size === 0) {
-        listDiv.textContent = "No keys pressed.";
-    } else {
-        listDiv.textContent = Array.from(pressedKeys).join(", ");
+    // Find all actions whose hotkey is currently pressed
+    const triggeredActions = [];
+    for (const [action, key] of Object.entries(hotkeys)) {
+        if (pressedKeys.has(key)) {
+            triggeredActions.push({ action, key });
+        }
+    }
+    listDiv.innerHTML = "";
+    if (triggeredActions.length === 0) {
+        // Show nothing if no actions are triggered
+        return;
+    }
+    for (const { action, key } of triggeredActions) {
+        const box = document.createElement("div");
+        box.style.background = "#23242a";
+        box.style.color = "#e0e0e0";
+        box.style.padding = "16px 24px";
+        box.style.margin = "8px 0";
+        box.style.borderRadius = "8px";
+        box.style.boxShadow = "0 2px 8px #000a";
+        box.style.fontSize = "1.1em";
+        box.textContent = `'${key.toUpperCase()}' → ${action}`;
+        listDiv.appendChild(box);
     }
 }
 
@@ -120,20 +133,14 @@ document.addEventListener("keydown", (e) => {
             break;
         }
     }
-    pressedKeys.add(e.key);
-    updatePressedKeysList();
-    for (const [action, key] of Object.entries(hotkeys)) {
-        if (e.key.toLowerCase() === key.toLowerCase()) {
-            updateTriggerLabel(action, e.key);
-            break;
-        }
-    }
+    pressedKeys.add(e.key.toLowerCase());
+    updateTriggeredActionsList();
 });
 
 // Handle keyup events to update pressed keys list
 document.addEventListener("keyup", (e) => {
-    pressedKeys.delete(e.key);
-    updatePressedKeysList();
+    pressedKeys.delete(e.key.toLowerCase());
+    updateTriggeredActionsList();
 });
 
 // Render hotkey settings list
@@ -167,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadDefaultHotkeys();
     loadHotkeys();
     renderHotkeyList();
-    updatePressedKeysList();
+    updateTriggeredActionsList();
 
     document.getElementById("open-settings").onclick = () => {
         document.getElementById("settings").style.display = "block";
