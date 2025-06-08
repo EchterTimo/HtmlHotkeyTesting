@@ -115,10 +115,17 @@ function hideKeyPrompt() {
 }
 
 // Handle keydown events
-document.addEventListener("keydown", (e) => {
+document.addEventListener('keydown', function(event) {
+    // Prevent hotkey triggers when focus is in an input, textarea, or contenteditable element
+    const tag = event.target.tagName.toLowerCase();
+    const isEditable = event.target.isContentEditable;
+    if (tag === 'input' || tag === 'textarea' || isEditable) {
+        return; // Do not trigger hotkeys
+    }
+
     if (recordingAction) {
-        e.preventDefault(); // Prevent default when rebinding
-        hotkeys[recordingAction] = e.key.toLowerCase();
+        event.preventDefault(); // Prevent default when rebinding
+        hotkeys[recordingAction] = event.key.toLowerCase();
         saveHotkeys();
         renderHotkeyList();
         recordingAction = null;
@@ -128,12 +135,12 @@ document.addEventListener("keydown", (e) => {
     }
     // Prevent default if key is a registered hotkey
     for (const key of Object.values(hotkeys)) {
-        if (e.key.toLowerCase() === key.toLowerCase()) {
-            e.preventDefault();
+        if (event.key.toLowerCase() === key.toLowerCase()) {
+            event.preventDefault();
             break;
         }
     }
-    pressedKeys.add(e.key.toLowerCase());
+    pressedKeys.add(event.key.toLowerCase());
     updateTriggeredActionsList();
 });
 
