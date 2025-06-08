@@ -7,26 +7,37 @@
 // scan for existing hotkeys in local storage
 // if no hotkeys are found, save the default hotkeys
 
-const DEFAULT_HOTKEYS = {
-    "move_up": "w",
-    "move_down": "s",
-    "move_left": "a",
-    "move_right": "d",
-    "show_help": "f1"
-};
-
+let DEFAULT_HOTKEYS = {};
 const HOTKEYS_KEY = "hotkeys";
 let hotkeys = {};
 let recordingAction = null;
 let pressedKeys = new Set();
 let popupDiv = null;
 
+// Load default hotkeys from default.json
+async function loadDefaultHotkeys() {
+    try {
+        const response = await fetch('default.json');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        DEFAULT_HOTKEYS = await response.json();
+    } catch (err) {
+        alert("Could not load default hotkey file (default.json). Settings will not work correctly.\n\n" + err);
+        DEFAULT_HOTKEYS = {};
+    }
+}
+
 // Load hotkeys from localStorage or use default
 function loadHotkeys() {
-    const stored = localStorage.getItem(HOTKEYS_KEY);
-    if (stored) {
-        hotkeys = JSON.parse(stored);
-    } else {
+    try {
+        const stored = localStorage.getItem(HOTKEYS_KEY);
+        if (stored) {
+            hotkeys = JSON.parse(stored);
+        } else {
+            hotkeys = { ...DEFAULT_HOTKEYS };
+            localStorage.setItem(HOTKEYS_KEY, JSON.stringify(hotkeys));
+        }
+    } catch (err) {
+        alert("Could not read hotkey settings from localStorage. Settings have been reset.\n\n" + err);
         hotkeys = { ...DEFAULT_HOTKEYS };
         localStorage.setItem(HOTKEYS_KEY, JSON.stringify(hotkeys));
     }
@@ -145,7 +156,8 @@ function renderHotkeyList() {
 }
 
 // Settings open/close
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadDefaultHotkeys();
     loadHotkeys();
     renderHotkeyList();
     updatePressedKeysList();
