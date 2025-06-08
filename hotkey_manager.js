@@ -155,6 +155,13 @@ function renderHotkeyList() {
     }
 }
 
+// Reset hotkeys to default
+function resetHotkeys() {
+    hotkeys = { ...DEFAULT_HOTKEYS };
+    saveHotkeys();
+    renderHotkeyList();
+}
+
 // Settings open/close
 document.addEventListener("DOMContentLoaded", async () => {
     await loadDefaultHotkeys();
@@ -169,6 +176,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("close-settings").onclick = () => {
         document.getElementById("settings").style.display = "none";
         document.getElementById("open-settings").style.display = "";
+    };
+
+    // Add this handler for the reset button
+    document.getElementById("reset-hotkeys").onclick = () => {
+        if (confirm("Are you sure you want to reset all hotkeys to default?")) {
+            resetHotkeys();
+        }
     };
 });
 
